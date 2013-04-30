@@ -1,0 +1,117 @@
+<!-- Copyright © 2005-2009 Pearson Education, Inc. or its affiliate(s). All rights reserved.--><!-- Report setup for PowerSchool reporting engine. --><setup>	<general>		<xmlformat_version>1.0</xmlformat_version>		<report_id>Contact_Mailing_Labels_PDF</report_id>		<report_name>Contact Mailing Labels (5160)</report_name>		<report_type>W_TEMPLATE_PRO</report_type>		<merger_user_vars_action></merger_user_vars_action>		<user_modifiable>0</user_modifiable>		<send_conf_to></send_conf_to>		<send_error_to></send_error_to>		<include_in_list>1</include_in_list>		<int_chars_option>0</int_chars_option>		<contact>			<name>Brent Johnson</name>			<job_title></job_title>			<email></email>			<phone></phone>			<url></url>		</contact>		<master_table>			<table_name>Students</table_name>		</master_table>		<result_file>			<format>TAB</format>			<field_delim>ASCII(9)</field_delim>			<rec_delim>ASCII(13)ASCII(10)</rec_delim>			<double_quote_surrounded>0</double_quote_surrounded>			<double_quote_remove_when_empty>0</double_quote_remove_when_empty>			<encoding_type>PDF</encoding_type>			<file_name_template>Contact_Mailing_Labels.pdf</file_name_template>			<file_name_max_length>0</file_name_max_length>			<template>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+
+&lt;fo:root xmlns:fo=&quot;http://www.w3.org/1999/XSL/Format&quot; xmlns:fox=&quot;http://xml.apache.org/fop/extensions&quot;&gt;
+
+&lt;fo:layout-master-set&gt;
+	&lt;fo:simple-page-master master-name=&quot;labels&quot; margin=&quot;0.5in 0 0.5in 0.1875in&quot; page-width=&quot;8.5in&quot; page-height=&quot;11in&quot;&gt;
+		&lt;fo:region-body /&gt;
+	&lt;/fo:simple-page-master&gt;
+&lt;/fo:layout-master-set&gt;
+
+&lt;fo:page-sequence master-reference=&quot;labels&quot;&gt;
+
+&lt;fo:flow flow-name=&quot;xsl-region-body&quot;&gt;
+&lt;fo:table table-layout=&quot;fixed&quot; width=&quot;8.25in&quot;&gt;
+&lt;fo:table-column column-width=&quot;2.74975in&quot;/&gt;
+&lt;fo:table-column column-width=&quot;2.74975in&quot;/&gt;
+&lt;fo:table-column column-width=&quot;2.74975in&quot;/&gt;
+	&lt;fo:table-body&gt;
+		&lt;fo:table-row height=&quot;1in&quot;&gt;
+		&lt;repetitive&gt;&lt;rep_row&gt;
+			~(if.(~[3].eq.1).then.&lt;/fo:table-row&gt;&lt;fo:table-row height=&quot;1in&quot;&gt;.endif.)
+			&lt;fo:table-cell background-repeat=&quot;no-repeat&quot; margin-right=&quot;0.15625in&quot; padding=&quot;0 0.1in 0 0.3in&quot; display-align=&quot;center&quot;&gt;
+			&lt;fo:block font-size=&quot;9pt&quot; &gt;
+				&lt;fo:inline white-space-collapse=&quot;false&quot;&gt;~[5] ~[10]~(v.CRLF)~(if.(~(u.includestudent)=true).then.re: ~[4]~(v.CRLF).endif.)~[15]~(v.CRLF)~(if.(~(v.DSQL_City).ne.&quot;&quot;).then.~[20],.endif.) ~[25] ~[30]&lt;/fo:inline&gt;
+			&lt;/fo:block&gt;
+			&lt;/fo:table-cell&gt;
+		&lt;/rep_row&gt;&lt;/repetitive&gt;
+		&lt;/fo:table-row&gt;
+	&lt;/fo:table-body&gt;
+&lt;/fo:table&gt;
+&lt;/fo:flow&gt;
+
+
+&lt;/fo:page-sequence&gt;
+&lt;/fo:root&gt;</template>		</result_file>		<due_date></due_date>		<revision_date></revision_date>		<g_description>Pulls contacts flagged with 'receives mailings' and creates a PDF file that can be printed onto Avery 5160 mailing labels.</g_description>		<comments_to_user></comments_to_user>		<programmer_comments>Version Notes*------------*Version: 1.1.0   Date: 04/05/2012 Author: Brent Johnson-Updated query to pull students with enroll status of 0 if the 'Selected students' option is unchecked.*------------*
+*------------*
+
+Version: 1.0.1
+   Date: 12/16/2009 
+ Author: Brent Johnson
+-Updated query to extract student last,first name.
+-Added user parameter option to include/exclude student name on labels.
+
+*------------*
+Version: 1.0
+   Date: 12/15/2009 
+ Author: Brent Johnson
+-Initial release
+</programmer_comments>		<owner_info></owner_info>	</general>	<user_data>		<u_item no="1">			<order_index>1</order_index>			<name>labeloffset</name>			<u_description>Define number of blank labels to insert on first page.  Allowed values: 0 thru 29.</u_description>			<user_info></user_info>			<to_update>0</to_update>			<default_value>0</default_value>			<display_as>N</display_as>			<display_as_info></display_as_info>			<Options></Options>			<type>INT</type>			<validation>				<lower_limit>0</lower_limit>				<upper_limit>29</upper_limit>				<min_nbr_of_chars>0</min_nbr_of_chars>				<max_nbr_of_chars>0</max_nbr_of_chars>				<required>0</required>			</validation>		</u_item>		<u_item no="2">			<order_index>2</order_index>			<name>includestudent</name>			<u_description>Include student name on labels.</u_description>			<user_info></user_info>			<to_update>0</to_update>			<default_value>0</default_value>			<display_as>C</display_as>			<display_as_info></display_as_info>			<Options></Options>			<type>BOOL</type>			<validation>				<lower_limit></lower_limit>				<upper_limit></upper_limit>				<min_nbr_of_chars>0</min_nbr_of_chars>				<max_nbr_of_chars>0</max_nbr_of_chars>				<required>0</required>			</validation>		</u_item>	</user_data>	<variables>		<v_item no="1">			<order_index>5</order_index>			<name>currentselection</name>			<v_description>Sets a flag that signals whether or not user requested current selection of students only.</v_description>			<type>INT</type>			<when_to_set>B4_QUERY</when_to_set>			<value>~(f.variable_create;name=use_selection;type=INT;when=NEVER)
+~(f.variable_set;name=use_selection;value=~(f.report;fn=usingselection))</value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>		<v_item no="2">			<order_index>10</order_index>			<name>whitespaceVars</name>			<v_description></v_description>			<type>INT</type>			<when_to_set>B4_QUERY</when_to_set>			<value>~(f.variable_create;name=CRLF;type=TEXT;when=NEVER;permanent=0)
+
+/** Carriage Return Line Feed (CRLF) **/
+~(f.variable_set;name=CRLF;value=~(f.char_from_ascii;ascii=13)~(f.char_from_ascii;ascii=10))
+</value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>		<v_item no="3">			<order_index>30</order_index>			<name>sqlStatement</name>			<v_description></v_description>			<type>TEXT</type>			<when_to_set>NEVER</when_to_set>			<value>SELECT 
+CASE WHEN rownum&gt;1 AND mod(rownum-1, 3)=0 THEN 1 ELSE 0 END AS rowflag,
+studentname,
+firstname,
+lastname,
+street,
+city,
+state,
+zip
+FROM( 
+	SELECT '' AS studentname, '' as firstname, '' as lastname, '' as street, '' as city,'' as state, '' as zip FROM dual 
+	WHERE ~(u.labeloffset) &gt;=1
+	CONNECT BY level &lt;= ~(u.labeloffset)
+	UNION ALL
+	SELECT studentname,firstname, lastname, street, city, state, zip
+	FROM(
+		SELECT
+		studentname,
+		ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_first') AS firstname,
+		ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_last') AS lastname,
+		ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_street') AS street,
+		ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_city') AS city,
+		ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_state') AS state,
+		ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_zip') AS zip
+		FROM(
+			SELECT v.student_last_first AS studentname, regexp_replace(v.field_name, 'contact(\d+)_.+$', '\1') AS num, v.studentid 			FROM pvsis_custom_students v			JOIN students s ON s.id = v.studentid
+			WHERE regexp_like(v.field_name, 'contact\d+_recvmail$', 'i') 
+			AND v.string_value ='1' 
+			AND v.schoolid = ~(v.curschoolid)
+			~(if.(~(v.use_selection)=1).then. AND v.studentid IN(~(f.table_info;table=students;dothisfor=currentsel;fn=value;field=id;delim=cma)-1).else. AND s.enroll_status = 0 .endif.)
+		) v
+		GROUP BY studentid, studentname, num
+		ORDER BY studentname,lastname,firstname
+	)
+)</value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>		<v_item no="4">			<order_index>35</order_index>			<name>sqlHandle</name>			<v_description></v_description>			<type>INT</type>			<when_to_set>NEVER</when_to_set>			<value></value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>		<v_item no="5">			<order_index>40</order_index>			<name>sqlQueryResult</name>			<v_description></v_description>			<type>TEXT</type>			<when_to_set>NEVER</when_to_set>			<value></value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>		<v_item no="6">			<order_index>65</order_index>			<name>X_createSQLVars</name>			<v_description>Creating variables that will bind to the SQL result columns.</v_description>			<type>INT</type>			<when_to_set>B4_QUERY</when_to_set>			<value>~(f.variable_create;name=DSQL_rowflag;type=INT;when=NEVER;permanent=0)
+~(f.variable_create;name=DSQL_StudentName;type=text;when=NEVER;permanent=0)
+~(f.variable_create;name=DSQL_FirstName;type=text;when=NEVER;permanent=0)
+~(f.variable_create;name=DSQL_LastName;type=text;when=NEVER;permanent=0)
+~(f.variable_create;name=DSQL_Street;type=text;when=NEVER;permanent=0)
+~(f.variable_create;name=DSQL_City;type=text;when=NEVER;permanent=0)
+~(f.variable_create;name=DSQL_State;type=text;when=NEVER;permanent=0)
+~(f.variable_create;name=DSQL_Zip;type=text;when=NEVER;permanent=0)</value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>		<v_item no="7">			<order_index>70</order_index>			<name>X_setSQLVars</name>			<v_description>Binding variables to sql result and executing the sql statement.</v_description>			<type>INT</type>			<when_to_set>B4_QUERY</when_to_set>			<value>~(f.variable_set;name=sqlStatement;value=[update])
+~(f.variable_set;name=sqlHandle;value=~(f.DSQL_New;sql=~(v.sqlStatement)))
+
+/** Do the select statement **/
+/**Add a line for each column in the query. type is very important**/
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:rowflag;col_type=INT;var=DSQL_rowflag)
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:StudentName;col_type=text;var=DSQL_StudentName)
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:FirstName;col_type=text;var=DSQL_FirstName)
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:LastName;col_type=text;var=DSQL_LastName)
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:Street;col_type=text;var=DSQL_Street)
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:City;col_type=text;var=DSQL_City)
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:State;col_type=text;var=DSQL_State)
+~(f.DSQL_AddSelectColumn;handle=~(v.sqlHandle);col=e:Zip;col_type=text;var=DSQL_Zip)
+
+
+~(f.DSQL_DoSelect;handle=~(v.sqlHandle))
+
+/** Set sqlQueryResult**/
+
+~(f.variable_set;name=sqlQueryResult;value=SQLhandle[eq]~(v.sqlHandle))
+</value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>		<v_item no="8">			<order_index>75</order_index>			<name>clearSQLHandle</name>			<v_description></v_description>			<type>INT</type>			<when_to_set>AT_THE_END</when_to_set>			<value>/** Clear the SQL handle **/
+
+~(f.DSQL_Clear;handle=~(v.sqlHandle))</value>			<init_value></init_value>			<missing_value_symbol></missing_value_symbol>			<permanent>0</permanent>		</v_item>	</variables>	<param>		<Param_Att_Modes>0</Param_Att_Modes>		<Param_Att_Conv>0</Param_Att_Conv>		<Param_Schools>0</Param_Schools>		<Param_Schools_Options></Param_Schools_Options>		<Param_Schools_Script></Param_Schools_Script>		<Param_Source>1</Param_Source>		<Param_Grades>0</Param_Grades>		<Param_Grades_Options></Param_Grades_Options>		<Param_Grades_Script></Param_Grades_Script>		<Param_Att_Codes_Categ>0</Param_Att_Codes_Categ>		<Param_Att_Codes>0</Param_Att_Codes>		<Param_DateToScan>0</Param_DateToScan>		<Param_DateRange>0</Param_DateRange>		<Param_Rep_Segments>0</Param_Rep_Segments>		<Param_Weeks>0</Param_Weeks>		<Param_Weeks_Options></Param_Weeks_Options>		<Param_Teachers>0</Param_Teachers>		<Param_Teachers_Options></Param_Teachers_Options>		<Param_Teachers_Script></Param_Teachers_Script>		<Param_Periods>0</Param_Periods>		<Param_Periods_Options></Param_Periods_Options>		<Param_Lines_per_page>0</Param_Lines_per_page>		<Param_Items_per_Line>0</Param_Items_per_Line>		<Param_Starting_Page_Nbr>0</Param_Starting_Page_Nbr>		<Param_Prcs_Options>0</Param_Prcs_Options>		<Param_Prcs_Options_Def></Param_Prcs_Options_Def>		<Param_Dest>0</Param_Dest>		<Param_UserVars_Sel_Script></Param_UserVars_Sel_Script>		<Param_Misc>0</Param_Misc>		<Param_Misc_Options></Param_Misc_Options>		<Param_Submit_Button_Code></Param_Submit_Button_Code>		<Param_Att_Codes_Options></Param_Att_Codes_Options>		<Param_Att_Codes_Categ_Opt></Param_Att_Codes_Categ_Opt>		<Param_JavaScript_ToInsert></Param_JavaScript_ToInsert>		<Param_Update_Script></Param_Update_Script>	</param>	<header>		<display>0</display>		<export>1</export>		<text></text>		<repeat_at_breaks>0</repeat_at_breaks>	</header>	<footer>		<display>0</display>		<export>0</export>		<text></text>		<repeat_at_breaks>0</repeat_at_breaks>	</footer>	<query>		<for_current_school_only>1</for_current_school_only>		<use_selection>0</use_selection>		<sel_val></sel_val>		<sel_val_type>INT</sel_val_type>		<validation_exp></validation_exp>		<main_query>			<table_name>Students</table_name>			<simple_query>~(v.sqlQueryResult)</simple_query>			<comments></comments>		</main_query>	</query>	<options>		<Use_Parameters_YN>1</Use_Parameters_YN>		<disable_use_sel_over>0</disable_use_sel_over>		<disable_curr_school_only_over>1</disable_curr_school_only_over>		<disable_destination_over>1</disable_destination_over>		<disable_int_char_option_over>1</disable_int_char_option_over>		<disable_Nbr_Lines_per_Page>1</disable_Nbr_Lines_per_Page>		<dont_reset_page_nbr>1</dont_reset_page_nbr>	</options>	<columns>		<display_headers>0</display_headers>		<export_headers>0</export_headers>		<nbr_lines_per_page>0</nbr_lines_per_page>		<nbr_items_per_line>0</nbr_items_per_line>		<multi_col_ordering>1</multi_col_ordering>		<nbr_of_break_levels>0</nbr_of_break_levels>		<generate_total_line>0</generate_total_line>		<item no="1">			<item_nbr>3</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>rowflag</title_heading>			<data_to_export>~(v.DSQL_rowflag)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>		<item no="2">			<item_nbr>4</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>StudentName</title_heading>			<data_to_export>~(v.DSQL_StudentName;encodeHTML)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>		<item no="3">			<item_nbr>5</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>FirstName</title_heading>			<data_to_export>~(v.DSQL_FirstName;encodeHTML)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>		<item no="4">			<item_nbr>10</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>LastName</title_heading>			<data_to_export>~(v.DSQL_LastName;encodeHTML)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>		<item no="5">			<item_nbr>15</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>Street</title_heading>			<data_to_export>~(v.DSQL_Street;encodeHTML)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>		<item no="6">			<item_nbr>20</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>City</title_heading>			<data_to_export>~(v.DSQL_City;encodeHTML)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>		<item no="7">			<item_nbr>25</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>State</title_heading>			<data_to_export>~(v.DSQL_State;encodeHTML)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>		<item no="8">			<item_nbr>30</item_nbr>			<user_modifiable>0</user_modifiable>			<description></description>			<title_heading>Zip</title_heading>			<data_to_export>~(v.DSQL_Zip;encodeHTML)</data_to_export>			<type>INT</type>			<missing_value_symbol></missing_value_symbol>			<fixed_length_info>				<length>0</length>				<fill_char></fill_char>				<justification>1</justification>			</fixed_length_info>			<display_format></display_format>			<nb_decimals>-666</nb_decimals>			<trim>				<start_at>0</start_at>				<nbr_of_chars>0</nbr_of_chars>			</trim>			<user_info></user_info>		</item>	</columns>	<destination>		<dest_type>LOCAL_FILE</dest_type>		<web_download>			<MIME_Type>application/pdf</MIME_Type>		</web_download>		<email>			<dest_address></dest_address>			<subject></subject>			<send_as_attach>0</send_as_attach>			<msg></msg>		</email>		<ftp>			<server_name></server_name>			<path></path>			<user_name></user_name>			<password></password>		</ftp>		<file>			<path></path>		</file>	</destination>	<management>		<created>			<date>20091215</date>			<time>09:00:00</time>			<by>Johnson, Brent</by>		</created>		<modified>			<date>20091216</date>			<time>13:24:30</time>			<by>Johnson, Brent</by>		</modified>		<report_version>1.0.1</report_version>		<modif_counter>1</modif_counter>	</management></setup>

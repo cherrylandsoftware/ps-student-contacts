@@ -1,0 +1,137 @@
+~[if#v.~[version] > 7]<!DOCTYPE html>[/if#v]
+<html>
+<head>
+<title>Student Contacts</title>
+~[wc:commonscripts]
+~[if#v.~[version] < 7]
+<link href="/images/powerschool.css" rel="stylesheet">
+[else#v]
+<link href="/images/css/screen.css" rel="stylesheet" media="screen">
+<link href="/images/css/print.css" rel="stylesheet" media="print">
+[/if#v]
+<SCRIPT LANGUAGE="JavaScript">
+<!-- Begin
+function formHandler(form){
+var URL = document.navigation.page.options[document.navigation.page.selectedIndex].value;
+window.location.href = URL;
+}
+// End -->
+</SCRIPT>
+
+<style type="text/css">
+.ctable {
+  border-collapse:collapse;
+}
+.hidden {
+  display:none;
+}
+</style>
+</head>
+
+<body ~[if#v.~[version] < 7]style="margin:10px;" background="/images/bg3.gif"[/if#v]>
+
+~[wc:teachers_header_fr~[if#v.~[version] > 7]_css[/if#v]]
+~[if#v.~[version] < 7]
+</td>
+</tr>
+<tr>
+<td width="10"><img src="/images/admin_top_left_corn.gif" width="10" height="9" alt="" border="0"></td>
+<td width="100%" background="/images/admin_top_mid_bckg.gif"><img src="/images/transparent.gif" width="1" height="9" alt="" border="0"></td>
+<td width="6"><img src="/images/admin_top_right_corn.gif" width="6" height="9" alt="" border="0"></td>
+</tr>
+<tr>
+<td width="10" background="/images/admin_top_left_side.gif"><img src="/images/transparent.gif" width="10" height="350" alt="" border="0"></td>
+<td width="100%" bgcolor="#ffffff" valign="top"><img src="/images/transparent.gif" width="1" height="2" alt="" border="0"><br>
+<br>
+<!-- Beginning of title of page -->
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="1" rowspan="2" valign="bottom">~[studenttitlephoto]</td>
+<td rowspan="2">&nbsp;</td>
+<td>
+<table border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td class="header">Contacts</td>
+<td>~[studentalert]</td>
+</tr>
+</table>
+</td>
+<form name="navigation"><td align="right" valign="top"><select name="page" size=1 onChange="javascript:formHandler()"><option value="">Select screens<option value="">--------------------~[x:teacherpages]</select></td></form>
+</tr>
+<tr>
+<td colspan="2" valign="bottom">~(studentname) &nbsp; ~(grade_level) &nbsp; ~(student_number) &nbsp; &nbsp; ~(track) &nbsp; &nbsp; ~(studschoolabbr) &nbsp; &nbsp; ~[enrollmentstatus]</td>
+</tr>
+</table>
+<!-- Ending of title of page -->
+[else#v]
+ <form name="navigation"><span class="account-photo">~[studenttitlephoto]</span><h1>Student Contacts<span class="nav-teacher"><select name="page" size=1 onChange="javascript:formHandler()"><option value="">Select Screens</option><option value="">--------------------~[x:teacherpages]</select></span></h1>
+<p>~(studentname) &nbsp; ~(grade_level) &nbsp; ~(student_number) &nbsp; &nbsp; ~(track) &nbsp; &nbsp; ~(studschoolabbr) &nbsp; &nbsp; ~[enrollmentstatus]</p></form>
+[/if#v]
+<div class="box-round">
+<!-- Start Content -->
+<table class="ctable" border="1" cellpadding="2">
+<thead>
+<tr class="headerrow">
+<th>Contact</th>
+<th>Address</th>
+<th>Information</th>
+</tr>
+</thead>
+<tbody>
+
+~[tlist_sql;
+SELECT 
+MAX(CASE WHEN field_name LIKE '%_ecpriority' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS priority,
+MAX(CASE WHEN field_name LIKE '%_rel' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS relationship,
+MAX(CASE WHEN field_name LIKE '%_first' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS firstname,
+MAX(CASE WHEN field_name LIKE '%_last' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS lastname,
+MAX(CASE WHEN field_name LIKE '%_street' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS street,
+MAX(CASE WHEN field_name LIKE '%_city' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS city,
+MAX(CASE WHEN field_name LIKE '%_state' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS state,
+MAX(CASE WHEN field_name LIKE '%_zip' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS zip,
+MAX(CASE WHEN field_name LIKE '%_recvmail' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS recvmail,
+MAX(CASE WHEN field_name LIKE '%_email' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS email,
+MAX(CASE WHEN field_name LIKE '%_homephone' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS homephone,
+MAX(CASE WHEN field_name LIKE '%_cellphone' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS cellphone,
+MAX(CASE WHEN field_name LIKE '%_workphone' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS workphone,
+MAX(CASE WHEN field_name LIKE '%_employer' THEN dbms_lob.substr(string_value,4000) ELSE NULL END) AS employer
+FROM
+(SELECT regexp_replace(field_name, 'contact(\d+)_.+$', '\1') AS num, field_name, string_value FROM pvsis_custom_students
+  WHERE regexp_like(field_name, 'contact\d+_.+$', 'i')
+  AND studentid = ~([01]id)
+)
+GROUP BY num
+;alternatecolor;]
+<tr  bgcolor="#edf3fe">
+	<td>
+		~(priority;t;if.blank.then=;else=<span>Contact Priority #~(priority;t)</span><br />)
+		~(rel;t;if.blank.then=;else=~(rel;t)<br />;)
+		<span style="font-size:11pt;">~(fname;t) ~(lname;t)</span><br />
+
+	</td>
+	<td>
+		~(street;t;if.blank.then=;else=<a href="http://maps.google.com/?z=14&q=~(street;t), ~(city;t), ~(state;t), ~(zip;t) (~(fname;t) ~(lname;t))&output" target="_blank">;)
+		~(street;t;if.blank.then=~(street;t)<br />;)
+		~(city;t;if.blank.then=;else=~(city;t),;) 
+		~(state;t;if.blank.then=;else=~(state;t)  ;)  
+		~(zip;t;if.blank.then=;else=~(zip;t);)
+		~(street;t;if.blank.then=;else=</a><br />;)
+		~(recvmail;t;if.test=1;then=*Receives mailings*)
+	</td>
+	<td >
+	~(email;t;if.blank.then=;else=Email: <a href="mailto:~(email;t)">~(email;t)</a><br />;)
+	~(homephone;t;if.blank.then=;else=Home:  ~(homephone;t)<br />;)
+	~(cellphone;t;if.blank.then=;else=Cell:  ~(cellphone;t)<br />;)
+	~(workphone;t;if.blank.then=;else=Work:  ~(workphone;t);)
+	~(employer;t;if.blank.then=;else=<br />Employer:~(employer;t);)
+	</td>
+</tr>
+[/tlist_sql]
+</tbody>
+</table>
+<!-- End Content-->
+</div>
+~[wc:teachers_footer_fr~[if#v.~[version] > 7]_css[/if#v]]
+
+</body>
+</html>

@@ -1,0 +1,288 @@
+~[if#req.~[gpv:action]=]
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="REFRESH" content="0;URL=/admin/students/contacts/studentcontacts.html?frn=~(studentfrn)" />
+</head>
+<body>
+</body>
+</html>
+[/if#req]
+~[if#req.~[gpv:action]=getcontact]
+[
+	"~[gpv:gidx]",
+	{
+		"priority":"~([01]contact~[gpv:gidx]_ecpriority;encodeHTML;replace=",\")",
+		"firstname":"~([01]contact~[gpv:gidx]_first;encodeHTML;replace=",\")",
+		"lastname":"~([01]contact~[gpv:gidx]_last;encodeHTML;replace=",\")",
+		"relation":"~([01]contact~[gpv:gidx]_rel;encodeHTML;replace=",\")"
+	},
+	{
+		"street":"~([01]contact~[gpv:gidx]_street;encodeHTML;replace=",\")",
+		"city":"~([01]contact~[gpv:gidx]_city;encodeHTML;replace=",\")",
+		"state":"~([01]contact~[gpv:gidx]_state;encodeHTML;replace=",\")",
+		"zip":"~([01]contact~[gpv:gidx]_zip;encodeHTML;replace=",\")",
+		"mailto":"~([01]contact~[gpv:gidx]_recvmail;encodeHTML;replace=",\")"
+	},
+	{
+		"email":"~([01]contact~[gpv:gidx]_email;encodeHTML;replace=",\")",
+		"homephone":"~([01]contact~[gpv:gidx]_homephone;encodeHTML;replace=",\")",
+		"cellphone":"~([01]contact~[gpv:gidx]_cellphone;encodeHTML;replace=",\")",
+		"workphone":"~([01]contact~[gpv:gidx]_workphone;encodeHTML;replace=",\")",
+		"employer":"~([01]contact~[gpv:gidx]_employer;encodeHTML;replace=",\")"
+	},
+	"<button class='editcontact'>Edit</button><br /><button class='deletecontact'>Delete</button>",
+	"~([01]contact~[gpv:gidx]_ecpriority;encodeHTML;replace=",\")",
+	"~([01]contact~[gpv:gidx]_last;encodeHTML;replace=",\"), ~([01]contact~[gpv:gidx]_first;encodeHTML;replace=",\")"
+]
+[/if#req]
+~[if#req.~[gpv:action]=deletecontact]
+<form action="/admin/changesrecorded.white.html" method="POST">
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_ecpriority)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_first)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_last)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_rel)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_street)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_city)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_state)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_zip)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_recvmail)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_email)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_homephone)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_workphone)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_cellphone)" value="" />
+<input name="~(JSFieldParam;[Students]contact~[gpv:gidx]_employer)" value="" />
+<input name="ac" value="prim" />
+</form>
+[/if#req]
+~[if#req.~[gpv:action]=addcontact]
+~[tlist_sql;
+SELECT MIN(t1.num+1) n FROM 
+(SELECT DISTINCT regexp_replace(field_name, '^contact(\d+)_.+$', '\1') AS num FROM pvsis_custom_students
+	WHERE studentid=~[gpv:sid]
+	AND regexp_like(field_name, '^contact\d+_.+$', 'i')
+  UNION
+  SELECT '0' from dual
+  ) t1
+LEFT JOIN
+(SELECT DISTINCT regexp_replace(field_name, '^contact(\d+)_.+$', '\1') AS num FROM pvsis_custom_students
+	WHERE studentid=~[gpv:sid]
+	AND regexp_like(field_name, '^contact\d+_.+$', 'i')
+	ORDER BY num) t2 ON t1.num+1 =t2.num 
+WHERE t2.num is null
+GROUP BY t2.num;]
+{"contactnumber":~(n;l)}
+[/tlist_sql]
+[/if#req]
+~[if#req.~[gpv:action]=geteditor]
+<form id="ceditform~[gpv:gidx]" name="ceditform~[gpv:gidx]" method="post" action="studentcontacts.html" >
+<table  class="datatable" border="1" cellpadding="4" cellspacing="0" align="center" style="width:98% !important;">
+<tr class="inforow">
+<td colspan="4" class="bold">Modify Contact Information</td>
+</tr>
+
+<tr>
+	<td class="bold">Name (last, first):</td>
+	<td class="bold">
+		<input type="text" name="[01]contact~[gpv:gidx]_last" id="contact~[gpv:gidx]_last" value="" size="15" />,
+		<input type="text" name="[01]contact~[gpv:gidx]_first" id="contact~[gpv:gidx]_first" value="" size="10" />
+	</td>
+<td class="bold">Emergency<br /> Contact Priority</td>
+<td>
+	<select name="[01]contact~[gpv:gidx]_ecpriority">
+	<option selected></option>
+	<option value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+	<option value="7">7</option>
+	<option value="8">8</option>
+	<option value="9">9</option>
+	</select>
+</td>
+</tr>
+<tr>
+<td class="bold">Relationship</td>
+<td colspan="3">
+	<select name="[01]contact~[gpv:gidx]_rel" id="contact~[gpv:gidx]_rel">
+	<option selected></option>
+	<option value="Mother">Mother</option>
+	<option value="Father">Father</option>
+	<option value="Step Father">Step Father</option>
+	<option value="Step Mother">Step Mother</option>
+	<option value="Foster Father">Foster Father</option>
+	<option value="Foster Mother">Foster Mother</option>
+	<option value="Grandfather">Grandfather</option>
+	<option value="Grandmother">Grandmother</option>
+	<option value="Aunt">Aunt</option>
+	<option value="Uncle">Uncle</option>
+	<option value="Sibling">Sibling</option>
+	<option value="Friend">Friend</option>
+	<option value="Probation Officer">Probation Officer</option>
+	<option value="Counselor">Counselor</option>
+	<option value="Caseworker">Caseworker</option>
+	<option value="Occupational Therapist">Occupational Therapist</option>
+	<option value="Speech Therapist">Speech Therapist</option>
+	<option value="Physical Therapist">Physical Therapist</option>
+	<option value="Teacher Consultant">Teacher Consultant</option>
+	<option value="Adult Student">Adult Student</option>		
+	<option value="Teaching Parent">Teaching Parent</option>	
+	<option value="Other">Other</option>
+	</select>
+</td>
+</tr>
+<tr>
+	<td class="bold" >
+		Home Address
+	</td>
+	<td  colspan="3">
+		Street<br />
+		<input id="c~[gpv:gidx]_street" size="26" name="[01]contact~[gpv:gidx]_street" value="" type="text" /> <br />
+		City, State, Zip<br />
+		<input id="c~[gpv:gidx]_city" size="20" name="[01]contact~[gpv:gidx]_city" value="" type="text" />, <input id="c~[gpv:gidx]_state" size="3" name="[01]contact~[gpv:gidx]_state" value="" type="text" /> <input id="c~[gpv:gidx]_zip" size="6" name="[01]contact~[gpv:gidx]_zip" value="" type="text" /><br />
+		<br />
+		<div class="address mini">
+		<span class="title">Student Home Address</span><br />
+		<span class="data" id="hstreet~[gpv:gidx]">~([01]street)</span><br />
+		<span class="data" id="hcity~[gpv:gidx]">~([01]city)</span>,&nbsp;<span class="data" id="hstate~[gpv:gidx]">~([01]state)</span>&nbsp;<span class="data" id="hzip~[gpv:gidx]">~([01]zip)</span> <a class="copyhomeaddr" href="#">[Copy]</a>
+		</div>
+		<div class="address mini">
+		<span class="title">Student Mailing Address</span><br />
+		<span class="data" id="mstreet~[gpv:gidx]">~([01]mailing_street)</span><br />
+		<span class="data" id="mcity~[gpv:gidx]">~([01]mailing_city)</span>,&nbsp;<span class="data" id="mstate~[gpv:gidx]">~([01]mailing_state)</span>&nbsp;<span class="data" id="mzip~[gpv:gidx]">~([01]mailing_zip)</span> <a class="copymailingaddr" href="#">[Copy]</a>
+		</div>
+	</td>
+</tr>
+<tr>
+	<td class="bold">
+		Email:
+	</td>
+	<td  valign="top">
+		<input  type="text" name="[01]contact~[gpv:gidx]_email" value="" id="contact~[gpv:gidx]_email" /><br />
+		<div class="mini">
+		  <span class="title">Demographics Guardian Email</span><br />
+		  <span class="data" id="guardianemail~[gpv:gidx]">~([01]guardianemail)</span><a class="copyguardianemail" href="#">[Copy]</a>
+		</div>
+	</td>
+	<td class="bold">
+		Receive letter mailings?
+	</td>
+	<td>
+		<input type="checkbox" name="[01]contact~[gpv:gidx]_recvmail" value="1" />
+	</td>
+</tr>
+<tr>
+	<td class="bold">
+		Home Phone:
+	</td>
+	<td valign="top">
+		<input size="17" type="text" name="[01]contact~[gpv:gidx]_homephone" value="" id="contact~[gpv:gidx]_homephone" /><br />
+		<div class="mini">
+		  <span class="title">Student Home Phone</span><br />
+		  <span class="data" id="studentphone~[gpv:gidx]">~([01]home_phone)</span><a class="copyphone" href="#">[Copy]</a>
+		</div>
+	</td>
+	<td  class="bold">
+		Cell Phone:
+	</td>
+	<td>
+		<input type="text" size="17" name="[01]contact~[gpv:gidx]_cellphone" value="" id="contact~[gpv:gidx]_cellphone" />
+	</td>
+	</tr>
+<tr>
+	<td  class="bold">Employer:</td>
+	<td>
+	<input type="text" name="[01]contact~[gpv:gidx]_employer" value="" size="25" id="contact~[gpv:gidx]_employer" /></td>
+	<td  class="bold">
+	Work Phone:
+	</td>
+	<td>
+	<input type="text" size="17" name="[01]contact~[gpv:gidx]_workphone" value="" id="contact~[gpv:gidx]_workphone" />
+	</td>
+</tr>
+
+<tr>
+<td style="background-color:#ffffff" colspan="4" align="right">
+<!--hidden fields for syncing data -->
+<input type="hidden" name="[01]Father" value="" id="sync_father~[gpv:gidx]" />
+<input type="hidden" name="[01]fatherdayphone" value="" id="sync_fatherdayphone~[gpv:gidx]" />
+<input type="hidden" name="[01]father_employer" value="" id="sync_father_employer~[gpv:gidx]" />
+<input type="hidden" name="[01]father_home_phone" value="" id="sync_father_home_phone~[gpv:gidx]" />
+<input type="hidden" name="[01]Mother" value="" id="sync_mother~[gpv:gidx]" />
+<input type="hidden" name="[01]motherdayphone" value="" id="sync_motherdayphone~[gpv:gidx]" />
+<input type="hidden" name="[01]mother_employer" value="" id="sync_mother_employer~[gpv:gidx]" />
+<input type="hidden" name="[01]mother_home_phone" value="" id="sync_mother_home_phone~[gpv:gidx]" />
+
+<!--end hidden sync fields -->
+<input type="hidden" name="ac" value="prim" />
+<button id="cancelbtn~[gpv:gidx]" class="button edit_cancel" type="button">Cancel</button>
+<button id="submitbtn~[gpv:gidx]" type="submit">Submit</button>
+</td>
+
+</tr>
+</table>
+</form>
+<!-- END PARENT CONTENT TABLE -->
+[/if#req]
+~[if#req.~[gpv:action]=fetchcontactnumbers]
+[
+~[tlist_sql;
+	SELECT DISTINCT regexp_replace(field_name, '^contact(\d+)_.+$', '\1') AS num FROM pvsis_custom_students
+	WHERE studentid=~[gpv:sid]
+	AND regexp_like(field_name, '^contact\d+_.+$', 'i')
+	ORDER BY num]
+~(num),
+[/tlist_sql]-1]
+[/if#req]
+~[if#req.~[gpv:action]=getfsynclist]
+<form id="synclist">
+~[tlist_sql;SELECT s2.dcid,s2.lastfirst
+FROM students s1
+JOIN relationship r ON r.person_id = s1.person_id
+JOIN students s2 ON s2.person_id = r.relatedperson_id
+WHERE s1.id = ~[gpv:sid]
+]
+<input id="sync~(dcidval;t)" type="checkbox" name="syncto" value="~(dcidval)" /><label for="sync~(dcidval)">~(syncstudentname;t)</label><br />
+[/tlist_sql]
+</form>
+[/if#req]
+~[if#req.~[gpv:action]=getfsyncform]
+<form action="/admin/changesrecorded.white.html" method="POST">
+<input id="sync-ecpriority" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_ecpriority)" value="" />
+<input id="sync-first" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_first)" value="" />
+<input id="sync-last" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_last)" value="" />
+<input id="sync-rel" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_rel)" value="" />
+<input id="sync-street" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_street)" value="" />
+<input id="sync-city" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_city)" value="" />
+<input id="sync-state" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_state)" value="" />
+<input id="sync-zip" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_zip)" value="" />
+<input id="sync-recvmail" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_recvmail)" value="" />
+<input id="sync-email" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_email)" value="" />
+<input id="sync-homephone" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_homephone)" value="" />
+<input id="sync-workphone" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_workphone)" value="" />
+<input id="sync-cellphone" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_cellphone)" value="" />
+<input id="sync-employer" name="~(JSFieldParam;[Students]contact~[gpv:gidx]_employer)" value="" />
+<input name="ac" value="prim" />
+</form>
+[/if#req]
+~[if#req.~[gpv:action]=getfsyncsource]
+{
+"sync-ecpriority":"~([01]contact~[gpv:gidx]_ecpriority;encodeHTML;replace=",\")",
+"sync-first":"~([01]contact~[gpv:gidx]_first;encodeHTML;replace=",\")",
+"sync-last":"~([01]contact~[gpv:gidx]_last;encodeHTML;replace=",\")",
+"sync-rel":"~([01]contact~[gpv:gidx]_rel;encodeHTML;replace=",\")",
+"sync-street":"~([01]contact~[gpv:gidx]_street;encodeHTML;replace=",\")",
+"sync-city":"~([01]contact~[gpv:gidx]_city;encodeHTML;replace=",\")",
+"sync-state":"~([01]contact~[gpv:gidx]_state;encodeHTML;replace=",\")",
+"sync-zip":"~([01]contact~[gpv:gidx]_zip;encodeHTML;replace=",\")",
+"sync-recvmail":"~([01]contact~[gpv:gidx]_recvmail;encodeHTML;replace=",\")",
+"sync-email":"~([01]contact~[gpv:gidx]_email;encodeHTML;replace=",\")",
+"sync-homephone":"~([01]contact~[gpv:gidx]_homephone;encodeHTML;replace=",\")",
+"sync-workphone":"~([01]contact~[gpv:gidx]_workphone;encodeHTML;replace=",\")",
+"sync-cellphone":"~([01]contact~[gpv:gidx]_cellphone;encodeHTML;replace=",\")",
+"sync-employer":"~([01]contact~[gpv:gidx]_employer;encodeHTML;replace=",\")"
+}
+[/if#req]
+~[if#req.~[gpv:action]=modsec]<a href="/admin/security/modaccess.html">Modify access privileges for this page</a>[/if#req]

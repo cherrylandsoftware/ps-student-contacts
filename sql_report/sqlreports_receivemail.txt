@@ -1,0 +1,50 @@
+<ReportName>Contacts - Receives Mailings</ReportName>
+<ReportTitle>Contacts - Receives Mailings</ReportTitle>
+<ReportDescription>Pulls contact information for all contacts that are flagged to receive mailings.</ReportDescription>
+<ReportHeader><td>Student Name</td><td>Contact Name</td><td>Relationship</td><td>Address</td><td>Contact Info</td></ReportHeader>
+<SQLQuery>SELECT 
+'<td>'||s.lastfirst||'</td><td>'||x.firstname||' '||x.lastname||'</td><td>'||x.relationship||'</td><td>'||x.street||'<br />'||x.city||', '||x.state||' '||x.zip||'</td><td>Home '||x.homephone||'<br />Cell '||x.cellphone||'<br />Work '||x.workphone||'</td>'
+as htmldata
+FROM
+(SELECT studentid AS studentid,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_first') AS firstname,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_last') AS lastname,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_ecpriority') AS priority,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_rel') AS relationship,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_street') AS street,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_city') AS city,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_state') AS state,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_zip') AS zip,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_email') AS email,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_homephone') AS homephone,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_cellphone') AS cellphone,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_workphone') AS workphone,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_employer') AS employer,
+ps_customfields.getstudentsCF(v.studentid, 'contact'||v.num||'_recvmail') AS recvmail
+
+FROM
+(SELECT regexp_replace(field_name, '^contact(\d+)_.+$', '\1') AS num, studentid FROM pvsis_custom_students
+WHERE regexp_like(field_name, '^contact\d+_recvmail$', 'i') AND string_value ='1' and schoolid = ~(curschoolid)
+) v
+GROUP BY num, studentid
+)x
+JOIN students s ON s.id = x.studentid
+ORDER BY x.studentid
+</SQLQuery>
+<CreateStudentSelection>1</CreateStudentSelection>
+<StudentSelectionQuery>SELECT DISTINCT s.DCID FROM
+( SELECT studentid FROM pvsis_custom_students 
+WHERE regexp_like(field_name, 'contact\d+_recvmail$', 'i') AND string_value ='1' and schoolid = ~(curschoolid)) v
+JOIN students s ON s.id = v.studentid</StudentSelectionQuery>
+<IncludeRowNumber>0</IncludeRowNumber>
+<OpeninNewWindow>0</OpeninNewWindow>
+<ParameterName1>&nbsp;</ParameterName1>
+<ParameterVal1>&nbsp;</ParameterVal1>
+<ParameterName2>&nbsp;</ParameterName2>
+<ParameterVal2>&nbsp;</ParameterVal2>
+<ParameterName3>&nbsp;</ParameterName3>
+<ParameterVal3>&nbsp;</ParameterVal3>
+<ParameterName4>&nbsp;</ParameterName4>
+<ParameterVal4>&nbsp;</ParameterVal4>
+<ParameterName5>&nbsp;</ParameterName5>
+<ParameterVal5>&nbsp;</ParameterVal5>

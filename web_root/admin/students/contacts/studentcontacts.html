@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student Contacts</title>
+~[x:insertfile;/scripts/custom-jquery-1.0.html]
+~[x:insertfile;/scripts/custom-datatables-1.0.html]
+
+<script type="text/javascript">
+var $c = jQuery.noConflict();
+var ContactController =(function($){
+	String.prototype.trim = function(){
+		return this.replace(/^\s+/,'').replace(/\s+$/,'');
+	}
+	var m_table;
+	var m_keyindex = 0;
+	var m_requestURL = '/admin/students/contacts/contactdata.html';
+	$(function(){
+		$.ajaxSetup({
+			url:m_requestURL
+		});
+		$('#error_container').ajaxError(function(e, jqxhr, settings, err){
+			clearError();
+			displayError("AJAX Error.  Page="+settings.url + " Error="+jqxhr.statusText);
+		});
+		m_table = $('#holder').addClass('display').dataTable({
+			"bPaginate": false,
+			"bFilter": false,
+			"bJQueryUI": true,
+			"sDom":'<"H"lfr<"contactactionbar"><"syncfamily">>t<"F"ip>',
+			"aaSorting":[[5,'asc'],[6,'asc']],
+			"aoColumnDefs":[
+				{"bSortable":false, "aTargets":['_all']},
+				{"bVisible":false, "aTargets":[m_keyindex,5,6]},
+				{"sWidth":"100px", "aTargets":[4]},
+				{
+					"fnRender": function(oObj){
+						var result = '';
+						var info = oObj.aData[1];
+						if($.isEmptyObject(info) || info ==""){return "";}
+						result +='<p style="font-weight:bold;">'+info.firstname + ' ' + info.lastname + '</p>';
+						if(info.priority.trim() != ""){
+							result +='<span style="font-size:8pt;">(Contact Priority #'+info.priority+')</span><br />';
+						}
+						result +='<span style="font-size:8pt;">('+info.relation+')</span>';
+						return result;
+					},
+					"aTargets":[1]
+				},
+				{
+					"fnRender": function(oObj){
+						var result ='';
+						var info = oObj.aData[2];
+						if($.isEmptyObject(info)|| info ==''){return '';}
+						var address = info.street.trim() =='' ? '' : info.street + '<br />';
+						address += info.city.trim()=='' ? '' : info.city + ',';
+						address += info.state + ' ' + info.zip;
+						if(info.street.trim() != ''){
+							result += '<a href="http://maps.google.com/?z=14&q=' + info.street + ', ' + info.city + ', ' + info.state + ', ' + info.zip + ' (' + oObj.aData[1].firstname + ' ' + oObj.aData[1].lastname + ')&output" target="_blank">' + address + '</a><br />';
+						}
+						else{
+							result += address;
+						}
+						if(info.mailto == '1'){
+							result +='*Receives mailings';
+						}
+						return result;
+					},
+					"aTargets":[2]
+				},
+				{
+					"fnRender": function(oObj){
+						var result ='';
+						var info = oObj.aData[3];
+						if($.isEmptyObject(info)|| info ==""){return "";}
+						result +='<p>';
+						if(info.email.trim() != ''){ result += '<span class="infoheader">Email: </span><a href="mailto:' + info.email + '">'+info.email+'</a><br/><span class="button" onclick="ContactController.copyEmail(\''+info.email+'\');" >+Add to automated emails</span><br />';}
+						if(info.homephone.trim() !=''){result += '<span class="infoheader">Home: </span>' + info.homephone + '<br />';}
+						if(info.cellphone.trim() !=''){result += '<span class="infoheader">Cell: </span>' + info.cellphone + '<br />';}
+						if(info.workphone.trim() !=''){result += '<span class="infoheader">Work: </span>' + info.workphone + '<br />';}
+						if(info.employer.trim() !=''){result += '<span class="infoheader">Employer: </span>' + info.employer + '<br />';}
+						result+='</p>';
+						return result;
+					},
+					"aTargets":[3]
+				}
+			],
+			"fnDrawCallback":function(){
+				$('#holder td').removeClass('sorting_1 sorting_2 sorting_3');
+			}
+		});
+		//create family sync feature if student is linked to other family members
+		var fcount = ~[tlist_sql;SELECT COUNT(*) FROM students s JOIN relationship r ON r.person_id = s.person_id WHERE s.id = ~(curstudid);nonemessage=0]~(c;l)[/tlist_sql];
+		if(fcount>0)
+		{
+			$('.contactactionbar').append('<button id="action-syncfamily">Sync To Family</button>');
+			$('#action-syncfamily').button({
+				icons:{
+					primary:'ui-icon-refresh'
+				}
+			});		
+		}
+		$('#action-syncfamily').click(function(){
+			$.get(m_requestURL, {"sid":"~(curstudid)","action":"getfsynclist"})
+			.done(function(data){
+				var dsync = $('<div id="syncf-dialog"></div>').append(data).dialog({
+					modal:true,
+					resizable:false,
+					title:"Copy contacts to these students",
+					buttons:[
+						{
+							text:"Ok",
+							click:function(){
+								$('#syncf-dialog input:checked').each(function(i,input){
+									syncStudentContacts('001'+$(input).val());
+								});
+								$(this).dialog("destroy");
+								$('#syncf-dialog').remove();
+							}
+						},
+						{text:"Cancel",click:function(){
+							$(this).dialog("destroy");
+							$('#syncf-dialog').remove();
+						}}
+					]
+				});
+				
+			});
+		});
+		//end family sync
+		//create add contact button, and bind click event handler
+		$('.contactactionbar').append('<button id="action-addcontact">Add Contact</button>');
+		$('#action-addcontact').button({
+			icons:{
+				primary:'ui-icon-plus'
+			}
+		});
+		$('#action-addcontact').click(function(){
+			$('#action-addcontact').hide();
+			$.getJSON(m_requestURL, {"frn":"~(frn)","action":"addcontact","sid":"~(curstudid)"}
+			)
+			.done(function(data){
+				if(data.contactnumber >0){
+					var n = data.contactnumber;
+					var ridx = m_table.fnAddData([n,"","","","","",""]);
+					var sourcerow = m_table.fnSettings().aoData[ridx].nTr;
+					$.get(m_requestURL, {"frn":"~[gpv:frn]","gidx":n, "action":"geteditor"})
+					.done(function(editform){
+						var editrow = m_table.fnOpen(sourcerow, editform, "edit_row");
+						$('form', editrow).submit(function(){
+							//copy mother/father to fields in students table
+							if($("#contact"+n+"_rel").val()=="Father"){syncParent('father', n);}
+							else if($("#contact"+n+"_rel").val()=="Mother"){syncParent('mother', n);}
+							$.post('/admin/changesrecorded.white.html', $(this).serialize())
+							.done(function(data){
+								m_table.fnClose(sourcerow);
+								refreshContact(n, sourcerow);
+							});
+							$('#action-addcontact').show();
+							return false;//prevent normal form submission
+						});
+						$('.edit_cancel',editrow).click(function(){
+							m_table.fnClose(sourcerow);
+							m_table.fnDeleteRow(sourcerow);
+							$('#action-addcontact').show();
+						});
+					});
+				}
+			});
+		});
+		//bind click event on all edit icons
+		$('.editcontact').live('click',function(){
+			var row = $(this).parents('tr')[0];
+			if(row){
+				var sourcerow = row;
+				var n = m_table.fnGetData(row)[m_keyindex];
+				$.get(m_requestURL, {"frn":"~[gpv:frn]","gidx":n, "action":"geteditor"})
+				.done(function(editform){
+					var editrow = m_table.fnOpen(row, editform, "edit_row");
+					$('form', editrow).submit(function(){
+						//copy mother/father to fields in students table
+						if($("#contact"+n+"_rel").val()=="Father"){syncParent('father', n);}
+						else if($("#contact"+n+"_rel").val()=="Mother"){syncParent('mother', n);}
+						$.post('/admin/changesrecorded.white.html', $(this).serialize())
+						.done(function(data){
+							m_table.fnClose(sourcerow);
+							refreshContact(n, sourcerow);
+						});
+						return false;//prevent normal form submission
+					});
+					$('form',editrow).data('contactnumber', n);
+					$('.edit_cancel',editrow).click(function(){
+						m_table.fnClose(sourcerow);
+					});
+				});
+			}
+		});
+		//bind click event on all delete icons
+		$('.deletecontact').live('click', function(){
+			var row = $(this).parents('tr')[0];
+			if(row){
+				var sourcerow = row;
+				var d = m_table.fnGetData(row);
+				var n = d[m_keyindex];
+				var contactname = $('td:first p', row).text();
+				if(confirm("Delete contact, \""+contactname+ "\"?")){
+				//submitting blank custom fields will cause PS to delete them
+					$.ajax({
+						type:"GET",
+						async:true,
+						dataType:"html",
+						data: {"action":"deletecontact","gidx":n,"frn":"~(frn)"}
+					})
+					.done(function(deldata){
+						var p = {};
+						$(deldata).find('input').each(function(idx, item){
+							var n = {};
+							if($(item).attr('name')!='ac'){
+								n[$(item).attr('name')] = '';
+							}
+							else{
+								n[$(item).attr('name')] = $(item).attr('value');
+							}
+							$.extend(p,n);				
+						});
+						$.post('/admin/changesrecorded.white.html', p)
+						.done(function(data){
+							m_table.fnDeleteRow(sourcerow);
+						});
+					})
+					.fail(function(jqxhr){
+						displayError(jqxhr.statusText);
+					});
+				}
+			}
+		});
+		//Bind to copy phone links
+		$('.copyphone').live('click', function(){
+			var n = $(this).parents('form').data('contactnumber');
+			$('#contact'+n+'_homephone').val($('#studentphone'+n).text());
+			return false;//override default click event
+		});
+		//Bind to copy guardian email links
+		$('.copyguardianemail').live('click', function(){
+			var n = $(this).parents('form').data('contactnumber');
+			$('#contact'+n+'_email').val($('#guardianemail'+n).text());
+			return false;//override default click event
+		});
+		//Bind to copy address  links
+		$('.copyhomeaddr').live('click', function(){
+			var n = $(this).parents('form').data('contactnumber');
+			copyAddress('h', n)
+			return false;//override default click event
+		});
+		$('.copymailingaddr').live('click', function(){
+			var n = $(this).parents('form').data('contactnumber');
+			copyAddress('m', n)
+			return false;//override default click event
+		});
+		//Fetch contact listing
+		$.getJSON(m_requestURL,{"frn":"~[gpv:frn]", "sid":"~(curstudid)","action":"fetchcontactnumbers"})
+		.done(function(data){
+			var nums = $.grep(data, function(n){return n > 0;});
+			for(n in nums){	refreshContact(nums[n]); }
+		});	
+	});//End jquery.ready
+	function copyAddress(type,n){
+		$('#c'+n+'_street').val($('#'+type+'street'+n).text());
+		$('#c'+n+'_city').val($('#'+type+'city'+n).text());
+		$('#c'+n+'_state').val($('#'+type+'state'+n).text());
+		$('#c'+n+'_zip').val($('#'+type+'zip'+n).text());
+	}
+	function syncStudentContacts(studentfrn){
+	//Syncronize all current student contact data to the destination student frn
+		$.getJSON(m_requestURL, {"frn":"~[gpv:frn]", "sid":"~(curstudid)","action":"fetchcontactnumbers"})
+		.done(function(data){
+			var nums = $.grep(data, function(n){return n >0;});
+			$.each(nums, function(i, num){
+				$.get(m_requestURL,{"action":"getfsyncform","gidx":num,"frn":studentfrn})
+				.done(function(syncform){
+					$.getJSON(m_requestURL,{"action":"getfsyncsource","gidx":num,"frn":"~[gpv:frn]"})
+					.done(function(syncsource){
+						var syncdata = {'ac':'prim'};
+						$.each(syncsource, function(key,val){
+							var sourcedata = $('#'+key, syncform);
+							if(sourcedata != undefined){
+								var n = $(sourcedata).attr('name');
+								syncdata[n] = val;
+							}
+						});
+						$.post('/admin/changesrecorded.white.html', syncdata)
+					});
+				})
+			});
+		});
+	}
+	function syncParent(syncname, n){
+		var f_lastfirst = '#sync_' + syncname +n;
+		var f_dayphone = '#sync_'+ syncname + 'dayphone'+n;
+		var f_homephone = '#sync_' + syncname + '_home_phone'+n;
+		var f_employer = '#sync_' + syncname + '_employer'+n;
+		//determine what the day phonenber should be.  
+		var dayphoneval = $('#contact'+n+'_cellphone').val();
+		if($('#contact'+n+'_cellphone').val() != ''){ dayphoneval = $('#contact'+n+'_cellphone').val(); }
+		else if($('#contact'+n+'_workphone').val() != ''){dayphoneval = $('#contact'+n+'_workphone').val();}
+		else { dayphoneval = $('#contact'+n+'_homephone').val();}
+		//copy values for sync
+		$(f_lastfirst).val($('#contact'+n+'_last').val() + ', ' + $('#contact'+n+'_first').val());
+		$(f_homephone).val($('#contact'+n+'_homephone').val());
+		$(f_employer).val($('#contact'+n+'_employer').val());
+		$(f_dayphone).val(dayphoneval);
+	}
+
+	function refreshContact(num, row){
+		var settings = {"frn":"~(studentfrn)","action":"getcontact","gidx":num};
+		$.ajax({
+			type:"GET",
+			async:true,
+			beforeSend: function(x){
+				if(x && x.overrideMimeType){
+					x.overrideMimeType("application/j-son;charset=UTF-8");
+				}
+			},
+			dataType:"text json",
+			dataFilter:function(data){
+				data = data.replace(/[\r\n\t]/g, '');
+				return data;
+			},
+			data: settings
+		})
+		.done(function(data, status){
+			if(row == null){
+				m_table.fnAddData(data);
+			}
+			else{
+				m_table.fnUpdate(data, row);
+			}
+			$('.editcontact').button({
+				icons:{
+					primary:"ui-icon-pencil"
+				}
+			});
+			$('.deletecontact').button({
+				icons:{
+					primary:"ui-icon-trash"
+				}
+			});
+		});
+	}
+	function displayError(msg){
+		$('#error_container').html('<div id="alertmsg" style="padding: 0pt 0.7em;" class="ui-state-error ui-corner-all"><p><span style="float: left; margin-right: 0.3em;" class="ui-icon ui-icon-alert"></span><strong>Alert: </strong>'+msg+'</p></div>').show();
+	}
+	function clearError(){
+		$('#error_container').empty().hide();
+	}
+
+
+	return {
+		copyEmail: 	function(email){
+			if(email.trim().length==0){return;}
+			var data = email.trim();
+			var current =$('#auto_emails').val();
+			if(current.length>0){data = current + ',' + email.trim();}
+			$('#auto_emails').val(data);
+		}
+	};
+}($c));
+</script>
+~[wc:commonscripts]
+<link href="/images/css/screen.css" rel="stylesheet" media="screen">
+<link href="/images/css/print.css" rel="stylesheet" media="print">
+<link rel="stylesheet" href="/images/css/theme/crm-css/jquery-ui.custom.css" type="text/css">
+<link rel="stylesheet" href="/images/css/custom/datatable_jui.css" type="text/css">
+
+<style type="text/css">
+body, td, p, ul, div{
+	color:inherit;
+	//color:expression(this.parentNode.currentStyle['color']);
+}
+#maincontent td, #maincontent tr, #maincontent th {
+  border: 1px solid ;
+  font-size: 9pt;
+}
+#holder td, #holder p {
+	font-size:9pt;
+} 
+#holder tr.odd {
+	background-color:#EDF3FE;
+}
+.hidden{display:none;}
+#successmsg{
+	font-size:11pt;
+	background-color:lightblue;
+	text-align:center;
+}
+#maincontent table{
+	border-collapse:collapse;
+}
+#holder_wrapper{
+	width:750px;
+}
+
+div.contactinfo{
+	margin-left:20px;
+	margin-right:20px;
+	border-bottom:1px solid black;
+}
+.infoheader {
+	font-weight:bold;
+}
+.inforow{
+	background-image:url(/images/blue_grad.png);
+}
+.datatable{
+	background-color:#edf3fe;
+	width: 750px !important;
+}
+div.address{
+	float:left;
+	margin-left:15px;
+}
+
+.mini {
+	color:#339900;
+	font-size:7pt;
+}
+.mini .title{
+  color: #000000;
+  text-decoration:underline;
+}
+.mini .data {
+	color:#339900;
+}
+.ui-dialog label {
+	float:none;
+}
+</style>
+
+</head>
+
+<body>
+~[wc:admin_header_frame_css]
+<!-- breadcrumb start -->
+	<a href="/admin/home.html" target="_top">Start Page</a> &gt; <a href="home.html?selectstudent=nosearch" target="_top">Student Selection</a> &gt; Student Contacts
+<!-- breadcrumb end -->
+~[wc:admin_navigation_frame_css]
+<!-- Beginning of title of page -->
+~[wc:title_student_begin_css]Student Contacts~[wc:title_student_end_css]
+<!-- Ending of title of page -->
+<!-- start of content and bounding box -->
+
+<div id="maincontent" align="center" >
+<div id="error_container"></div>
+<!--CUSTOM Student Contacts list -->
+
+<table id="holder" border="1" cellpadding="2" cellspacing="0" align="center" >
+<thead><tr class="inforow">
+<th>&nbsp;</th>
+<th>Contact</th>
+<th>Address</th>
+<th>Contact Info</th>
+<th>Options</th>
+<th>&nbsp;</th>
+<th>&nbsp;</th>
+</tr></thead>
+<tbody>
+</tbody>
+</table>
+
+<!-- END Student Contacts Content list-->
+<!--Begin guardian information form -->
+<form id="miscform" action="/admin/changesrecorded.white.html" method="POST">
+<table class="datatable" border="1" cellpadding="4" cellspacing="0" align="center" >
+<tr id="echeader" class="inforow">
+	<td colspan="4" class="bold">Emergency Contacts</td>
+</tr>
+<tr>
+	<td class="bold">Doctor</td>
+	<td>Name<br /><input type="text" name="[01]Doctor_Name" value="" size="25"></td>
+	<td>Phone<br /><input type="text" name="[01]Doctor_Phone" value="" size="15"></td>
+</tr>
+<tr>
+	<td class="bold">Dentist</td>
+	<td>Name<br /><input type="text" name="[01]Dentist_Name" value="" size="25"></td>
+	<td>Phone<br /><input type="text" name="[01]Dentist_Phone" value="" size="15"></td>
+</tr>
+~[if#sso.prefSSOEnabled]
+[else#sso]
+<tr class="inforow">
+	<td colspan="4" class="bold">Student Contact Automatic Email Reports</td>
+</tr>
+<tr>
+	<td class="bold">Contact is registered to receive</td>
+	<td colspan="3">
+		<input type="checkbox" name="[01]autosend_summary" value="yes"> Summary of current grades and attendance
+		<br />
+		<input type="checkbox" name="[01]Autosend_attendancedetail" value="yes"> Detailed report of attendance
+		<br />
+		<input type="checkbox" name="[01]Autosend_gradedetail" value="yes"> Detailed report showing all assignment scores for each class
+		<br />
+		<input type="checkbox" name="[01]Autosend_schoolannouncements" value="yes"> School announcements
+		<br />
+		<input type="checkbox" name="[01]Autosend_balancealert" value="yes"> Balance Alert (Note: Will only be sent when a student is low on funds.)
+	</td>
+</tr>
+<tr>
+	<td class="bold">How often?</td>
+	<td colspan="3">
+		<select name="[01]Autosend_howoften"> 
+			<option value="0" selected>Never</option>
+			<option value="7">Once a week</option>
+			<option value="14">Once every two weeks</option>
+			<option value="30">Once a month</option>
+			<option value="1">Daily</option>
+		</select>
+	</td>
+</tr>
+<tr>
+	<td class="bold">Send now?</td>
+	<td colspan="3">
+		<input type="checkbox" name="sendNow" value="checked">
+	</td>
+</tr>
+<tr>
+	<td class="bold">Automatic Email Reports email list:</td>
+	<td colspan="3">
+		<input type="text" name="[01]GuardianEmail" id="auto_emails" value="" size="40">
+	</td>
+</tr>
+<tr>
+	<td colspan="4">&nbsp;</td>
+</tr>
+[/if#sso]
+<tr class="inforow">
+	<td colspan="4" class="bold">Student Contact Alert</td>
+</tr>
+<tr>
+	<td class="bold">Student Contact Alert Text</td>
+	<td colspan="3">
+<textarea name="[01]Alert_Guardian" rows="7" cols="40"></textarea>
+	</td>
+</tr>
+<tr>
+	<td class="bold">Alert Expires (date)</td>
+	<td colspan="3">
+		<input type="text" name="[01]Alert_GuardianExpires" value="" size="10" onchange="checkDates('~(JSFieldParam;[01]Alert_GuardianExpires)');" /> (0/0/0 to never expire)
+	</td>
+</tr>
+<tr style="background-color:#ffffff" >
+<td colspan="4" align="right">
+	<input type="hidden" value="sendnow" name="ac" />
+	<input type="hidden" name="ac" value="prim" />
+	~[submitbutton]
+</td>
+</tr>
+</table>
+</form>
+<!--End guardian information form -->
+</div>
+<!-- end of content of bounding box -->
+~[wc:admin_footer_frame_css]
+
+</body>
+</html>
